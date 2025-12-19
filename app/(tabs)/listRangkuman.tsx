@@ -5,6 +5,7 @@ import { Colors } from '@/constants/theme';
 import { useAuth } from '@/hooks/userAuth';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient'; // Tambahkan ini
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useState } from 'react';
@@ -12,6 +13,7 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    Platform,
     RefreshControl,
     StyleSheet,
     Text,
@@ -29,63 +31,97 @@ export default function ListRangkuman() {
     const router = useRouter();
     const scheme = useColorScheme();
     const colorTheme = Colors[scheme ?? 'dark'];
-    
-    // Tambah hook useAuth
-    const { statusLogin, isAuthenticated, isCheckingAuth, userData } = useAuth();
+
+    const { isAuthenticated, isCheckingAuth } = useAuth();
 
     const loadSavedData = useCallback(async (showRefreshIndicator = false) => {
         try {
-            if (showRefreshIndicator) {
-                setRefreshing(true);
-            } else {
-                setLoading(true);
-            }
+            if (showRefreshIndicator) setRefreshing(true);
+            else setLoading(true);
+
+            console.log('🔍 Loading data from SecureStore...');
 
             const data = await SecureStore.getItemAsync(STORAGE_KEY);
-            if (data) {
+
+            if (!data) {
+                console.log('📭 No data found in storage');
+                setSavedData([]);
+                return;
+            }
+
+            console.log('📥 Raw data retrieved, length:', data.length);
+
+            try {
                 const parsedData = JSON.parse(data);
-                // Sort by savedAt (newest first)
-                const sortedData = parsedData.sort((a: any, b: any) => 
+
+                // Validasi bahwa data adalah array
+                if (!Array.isArray(parsedData)) {
+                    console.error('❌ Data is not an array:', typeof parsedData);
+                    // Jika data rusak, hapus dari storage
+                    await SecureStore.deleteItemAsync(STORAGE_KEY);
+                    setSavedData([]);
+                    return;
+                }
+
+                console.log(`📊 Parsed ${parsedData.length} items`);
+
+                // Filter hanya data yang valid
+                const validData = parsedData.filter(item =>
+                    item &&
+                    typeof item === 'object' &&
+                    item.id &&
+                    item.savedAt
+                );
+
+                if (validData.length !== parsedData.length) {
+                    console.warn(`⚠️ Filtered out ${parsedData.length - validData.length} invalid items`);
+                }
+
+                // Sort by date (newest first)
+                const sortedData = validData.sort((a: any, b: any) =>
                     new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
                 );
+
+                console.log('✅ Loaded data:', sortedData.map(item => ({
+                    id: item.id,
+                    name: decodeURIComponent(item.fileInfo?.originalName || 'Unknown'),
+                    date: item.savedAt
+                })));
+
                 setSavedData(sortedData);
-            } else {
+
+            } catch (parseError) {
+                console.error('❌ Error parsing JSON:', parseError);
+                // Jika data corrupt, hapus dari storage
+                await SecureStore.deleteItemAsync(STORAGE_KEY);
                 setSavedData([]);
+                Alert.alert('Error', 'Data tidak valid, telah direset');
             }
+
         } catch (error) {
-            console.error('Error loading data:', error);
+            console.error('❌ Error loading data:', error);
             Alert.alert('Error', 'Gagal memuat data rangkuman');
         } finally {
             setLoading(false);
             setRefreshing(false);
+            console.log('🏁 Finished loading data');
         }
     }, []);
-
-    // Versi 1: useFocusEffect sederhana
     useFocusEffect(
         useCallback(() => {
-            console.log('ListRangkuman tab focused - refreshing data');
-            
-            // Hanya load data jika user sudah login
-            if (isAuthenticated()) {
-                loadSavedData();
-            } else {
-                setLoading(false);
-            }
-            
-            // Cleanup function (optional)
-            return () => {
-                console.log('ListRangkuman tab unfocused');
-            };
+            if (isAuthenticated()) loadSavedData();
+            else setLoading(false);
         }, [isAuthenticated, loadSavedData])
     );
+
     const onRefresh = useCallback(() => {
-        if (isAuthenticated()) {
-            loadSavedData(true);
-        }
+        if (isAuthenticated()) loadSavedData(true);
     }, [isAuthenticated, loadSavedData]);
 
     const deleteItem = (id: string) => {
+        console.log('Attempting to delete item with id:', id); // Debug log
+        console.log('Current savedData IDs:', savedData.map(item => item.id)); // Debug log
+
         Alert.alert(
             'Hapus Data',
             'Yakin ingin menghapus rangkuman ini?',
@@ -96,13 +132,93 @@ export default function ListRangkuman() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            const updatedData = savedData.filter(item => item.id !== id);
-                            await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updatedData));
+                            console.log('Starting delete process for id:', id);
+
+                            // 1. Ambil data langsung dari SecureStore untuk memastikan data terbaru
+                            const savedDataFromStorage = await SecureStore.getItemAsync(STORAGE_KEY);
+                            console.log('Raw data from storage:', savedDataFromStorage ? 'exists' : 'null');
+
+                            if (!savedDataFromStorage) {
+                                console.log('No data found in storage');
+                                setSavedData([]);
+                                return;
+                            }
+
+                            let parsedData: any[] = [];
+
+                            // 2. Parse dengan error handling
+                            try {
+                                parsedData = JSON.parse(savedDataFromStorage);
+                                if (!Array.isArray(parsedData)) {
+                                    console.warn('Parsed data is not an array:', parsedData);
+                                    parsedData = [];
+                                }
+                            } catch (parseError) {
+                                console.error('Error parsing data:', parseError);
+                                parsedData = [];
+                            }
+
+                            console.log('Parsed data length:', parsedData.length);
+                            console.log('Parsed data IDs:', parsedData.map(item => item?.id));
+
+                            // 3. Filter data - perbaikan: gunakan strict comparison
+                            const originalLength = parsedData.length;
+                            const updatedData = parsedData.filter(item => {
+                                if (!item || typeof item !== 'object' || !item.id) {
+                                    return true; // Keep invalid items to avoid data loss
+                                }
+                                return item.id.toString() !== id.toString(); // Convert to string for comparison
+                            });
+
+                            console.log('Updated data length:', updatedData.length);
+                            console.log('Items removed:', originalLength - updatedData.length);
+
+                            // 4. Cek apakah ada perubahan
+                            if (updatedData.length === originalLength) {
+                                console.log('No item found with id:', id);
+                                console.log('Available IDs:', parsedData.map(item => item?.id));
+
+                                // Tetap update state lokal untuk sinkronisasi
+                                setSavedData(prev => {
+                                    const newData = prev.filter(item => item.id !== id);
+                                    console.log('Local state updated to length:', newData.length);
+                                    return newData;
+                                });
+                                return;
+                            }
+
+                            // 5. Simpan ke SecureStore
+                            console.log('Saving updated data to storage');
+                            if (updatedData.length > 0) {
+                                await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updatedData));
+                                console.log('Data saved to storage successfully');
+                            } else {
+                                // Hapus key jika array kosong
+                                await SecureStore.deleteItemAsync(STORAGE_KEY);
+                                console.log('Storage key deleted');
+                            }
+
+                            // 6. Update state lokal dengan data dari storage (bukan dari filter state)
+                            console.log('Updating local state with filtered data');
                             setSavedData(updatedData);
-                            Alert.alert('Sukses', 'Rangkuman berhasil dihapus');
+
+                            // 7. Tambahkan log untuk verifikasi
+                            setTimeout(async () => {
+                                const verifyData = await SecureStore.getItemAsync(STORAGE_KEY);
+                                console.log('Verification - Data in storage after delete:',
+                                    verifyData ? JSON.parse(verifyData).length : 0, 'items');
+                            }, 100);
+
                         } catch (error) {
-                            console.error('Error deleting item:', error);
+                            console.error('Error deleting rangkuman:', error);
                             Alert.alert('Error', 'Gagal menghapus rangkuman');
+
+                            // Fallback: update state lokal meskipun storage error
+                            setSavedData(prev => {
+                                const newData = prev.filter(item => item.id !== id);
+                                console.log('Fallback - Local state updated to:', newData.length, 'items');
+                                return newData;
+                            });
                         }
                     }
                 }
@@ -113,163 +229,85 @@ export default function ListRangkuman() {
     const navigateToDetail = (item: any) => {
         router.push({
             pathname: '/detailRangkuman',
-            params: { 
-                data: JSON.stringify(item),
-                id: item.id 
-            }
+            params: { data: JSON.stringify(item), id: item.id }
         });
     };
 
-    const navigateToLogin = () => {
-        router.push('/(tabs)/profile');
-    };
-
-    const navigateToHome = () => {
-        router.push('/(tabs)');
-    };
-
     const renderItem = ({ item, index }: { item: any; index: number }) => {
-        // Decode nama file dari URL encoding
         const fileName = decodeURIComponent(item.fileInfo?.originalName || `Rangkuman ${index + 1}`);
-        
-        // Format tanggal dengan error handling
-        let formattedDate = "invalid Date";
+        let formattedDate = "Baru saja";
         try {
             const date = new Date(item.savedAt);
             if (!isNaN(date.getTime())) {
                 formattedDate = date.toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    day: 'numeric', month: 'short', year: 'numeric'
                 });
             }
-        } catch (error) {
-            console.error('Error formatting date:', error);
-        }
+        } catch (e) { }
 
         return (
-            <ThemedView key={item.id} style={styles.cardContainer}>
-                <CardListRangkuman 
+            <View key={item.id} style={styles.cardWrapper}>
+                <CardListRangkuman
                     title={fileName}
                     date={formattedDate}
                     itemCount={item.data?.materi?.length || 0}
-                    soalCount={item.data?.materi?.reduce((acc: number, curr: any) => 
+                    soalCount={item.data?.materi?.reduce((acc: number, curr: any) =>
                         acc + (curr.soalLatihan?.length || 0), 0)}
                     fileSize={item.fileInfo?.size}
                     onPress={() => navigateToDetail(item)}
                     onDelete={() => deleteItem(item.id)}
                     showDeleteButton={true}
                 />
-            </ThemedView>
+            </View>
         );
     };
 
-    // Tampilkan loading saat check auth status
     if (isCheckingAuth()) {
         return (
             <ThemedView style={styles.container}>
                 <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color="#4A6FA5" />
-                    <Text style={styles.loadingText}>Memeriksa status login...</Text>
+                    <ActivityIndicator size="large" color={colorTheme.tint} />
                 </View>
             </ThemedView>
         );
     }
 
-    // Jika user belum login
     if (!isAuthenticated()) {
         return (
             <ThemedView style={styles.container}>
-                {/* Header tetap sama */}
-                <ThemedView style={styles.header}>
-                    <ThemedView style={styles.headerContent}>
-                        <ThemedText style={styles.title}>Rangkuman Tersimpan</ThemedText>
-                        <ThemedText style={styles.subtitle}>
-                            Login untuk melihat rangkuman
-                        </ThemedText>
-                    </ThemedView>
-                </ThemedView>
-
-                {/* Konten untuk user belum login */}
                 <View style={styles.loginRequiredContainer}>
-                    <Ionicons name="lock-closed-outline" size={80} color={colorTheme.icon} />
-                    <ThemedText style={styles.loginTitle}>Login Diperlukan</ThemedText>
+                    <View style={styles.iconCircle}>
+                        <Ionicons name="lock-closed" size={40} color={colorTheme.tint} />
+                    </View>
+                    <ThemedText style={styles.loginTitle}>Akses Terbatas</ThemedText>
                     <ThemedText style={styles.loginMessage}>
-                        Anda perlu login untuk melihat rangkuman yang tersimpan
+                        Masuk untuk menyimpan dan melihat riwayat rangkuman belajar Anda.
                     </ThemedText>
-                    
-                    <TouchableOpacity 
-                        style={[styles.loginButton, {backgroundColor: colorTheme.tint}]}
-                        onPress={navigateToLogin}
-                    >
-                        <Ionicons name="log-in-outline" size={20} color="white" />
-                        <Text style={styles.loginButtonText}>Login Sekarang</Text>
-                    </TouchableOpacity>
 
-                    <TouchableOpacity 
-                        style={styles.createButton}
-                        onPress={navigateToHome}
-                    >
-                        <Ionicons name="add-circle-outline" size={20} color={colorTheme.tint} />
-                        <Text style={[styles.createButtonText, {color: colorTheme.tint}]}>
-                            Buat Rangkuman Baru
-                        </Text>
+                    <TouchableOpacity style={styles.buttonWidth} onPress={() => router.push('/(tabs)/profile')}>
+                        <LinearGradient
+                            colors={[colorTheme.gradientPrimaryStart, colorTheme.gradientPrimaryEnd] as const}
+                            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                            style={styles.loginButton}
+                        >
+                            <Text style={styles.loginButtonText}>Masuk Sekarang</Text>
+                        </LinearGradient>
                     </TouchableOpacity>
                 </View>
             </ThemedView>
         );
     }
 
-    // Jika user sudah login, tampilkan konten biasa
     return (
         <ThemedView style={styles.container}>
-            {/* Header */}
-            <ThemedView style={styles.header}>
-                <ThemedView style={styles.headerContent}>
-                    <View style={styles.headerRow}>
-                        <View style={styles.headerTextContainer}>
-                            <ThemedText style={styles.title}>Rangkuman Tersimpan</ThemedText>
-                            <ThemedText style={styles.subtitle}>
-                                {savedData.length} rangkuman
-                            </ThemedText>
-                        </View>
-                        <TouchableOpacity 
-                            style={styles.refreshButton}
-                            onPress={() => loadSavedData(true)}
-                            disabled={refreshing}
-                        >
-                            {refreshing && (
-                                <ActivityIndicator size="small" color={colorTheme.tint} />
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </ThemedView>
-            </ThemedView>
+            <View style={styles.header}>
+                <ThemedText style={styles.title}>Koleksi</ThemedText>
+                <ThemedText style={styles.subtitle}>{savedData.length} Rangkuman Tersimpan</ThemedText>
+            </View>
 
-            {/* Content */}
             {loading ? (
                 <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color="#4A6FA5" />
-                    <Text style={styles.loadingText}>Memuat data...</Text>
-                </View>
-            ) : savedData.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                    <Ionicons name="document-text-outline" size={80} color={colorTheme.icon} />
-                    <ThemedText style={styles.emptyText}>Belum ada rangkuman</ThemedText>
-                    <ThemedText style={styles.emptySubtext}>
-                        Upload PDF untuk membuat rangkuman pertama Anda
-                    </ThemedText>
-                    <TouchableOpacity 
-                        style={[styles.createButton, {marginTop: 20}]}
-                        onPress={navigateToHome}
-                    >
-                        <Ionicons name="add-circle-outline" size={20} color={colorTheme.tint} />
-                        <Text style={[styles.createButtonText, {color: colorTheme.tint}]}>
-                            Buat Rangkuman Baru
-                        </Text>
-                    </TouchableOpacity>
+                    <ActivityIndicator size="large" color={colorTheme.tint} />
                 </View>
             ) : (
                 <FlatList
@@ -282,27 +320,20 @@ export default function ListRangkuman() {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            colors={[colorTheme.tint]}
                             tintColor={colorTheme.tint}
-                            title="Menyegarkan..."
-                            titleColor={colorTheme.tint}
+                            colors={[colorTheme.tint]}
                         />
                     }
-                    // ListHeaderComponent={
-                    //     <View style={styles.refreshHint}>
-                    //         <Ionicons name="arrow-down-outline" size={16} color={colorTheme.tint} />
-                    //         <Text style={[styles.refreshHintText, {color: colorTheme.text}]}>
-                    //             Tarik ke bawah untuk menyegarkan
-                    //         </Text>
-                    //     </View>
-                    // }
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-                            <Ionicons name="document-text-outline" size={80} color={colorTheme.icon} />
-                            <ThemedText style={styles.emptyText}>Belum ada rangkuman</ThemedText>
-                            <ThemedText style={styles.emptySubtext}>
-                                Upload PDF untuk membuat rangkuman pertama Anda
-                            </ThemedText>
+                            <Ionicons name="document-text-outline" size={64} color={colorTheme.icon} style={{ opacity: 0.3 }} />
+                            <ThemedText style={styles.emptyText}>Belum Ada Data</ThemedText>
+                            <TouchableOpacity
+                                style={[styles.createButton, { borderColor: colorTheme.tint }]}
+                                onPress={() => router.push('/(tabs)')}
+                            >
+                                <ThemedText style={{ color: colorTheme.tint, fontWeight: '700' }}>Mulai Merangkum</ThemedText>
+                            </TouchableOpacity>
                         </View>
                     }
                 />
@@ -316,140 +347,96 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     header: {
-        paddingTop: 60,
+        paddingTop: Platform.OS === 'ios' ? 70 : 50,
+        paddingHorizontal: 24,
         paddingBottom: 20,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    headerContent: {
-        marginTop: 10,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-    },
-    headerTextContainer: {
-        flex: 1,
     },
     title: {
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 4,
+        fontSize: 32,
+        fontWeight: '900',
+        letterSpacing: -1,
     },
     subtitle: {
-        fontSize: 14,
-        color: '#64748B',
+        fontSize: 15,
         fontWeight: '500',
-    },
-    refreshButton: {
-        padding: 8,
-        marginLeft: 10,
-    },
-    cardContainer: {
-        marginHorizontal: 20,
-        marginBottom: 16,
+        opacity: 0.5,
+        marginTop: 4,
     },
     listContainer: {
         paddingTop: 10,
-        paddingBottom: 40,
+        paddingBottom: 100,
+    },
+    cardWrapper: {
+        marginHorizontal: 20,
+        marginBottom: 16,
     },
     centerContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 12,
-    },
-    loadingText: {
-        fontSize: 16,
-        color: '#64748B',
-        marginTop: 12,
     },
     emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
+        marginTop: 100,
         alignItems: 'center',
         paddingHorizontal: 40,
-        gap: 16,
     },
     emptyText: {
-        fontSize: 20,
-        fontWeight: '600',
-        textAlign: 'center',
-        marginTop: 10,
+        fontSize: 18,
+        fontWeight: '700',
+        marginTop: 16,
+        marginBottom: 24,
+        opacity: 0.6,
     },
-    emptySubtext: {
-        fontSize: 14,
-        textAlign: 'center',
-        color: '#94A3B8',
-        lineHeight: 20,
+    createButton: {
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        borderWidth: 1.5,
     },
-    // Styles untuk login required
     loginRequiredContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 40,
-        gap: 20,
+        paddingHorizontal: 30,
+    },
+    iconCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
     },
     loginTitle: {
         fontSize: 24,
-        fontWeight: '700',
-        textAlign: 'center',
-        marginTop: 10,
+        fontWeight: '800',
+        marginBottom: 12,
     },
     loginMessage: {
         fontSize: 16,
         textAlign: 'center',
-        color: '#64748B',
+        opacity: 0.6,
         lineHeight: 24,
-        marginBottom: 10,
+        marginBottom: 32,
+    },
+    buttonWidth: {
+        width: '100%',
     },
     loginButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        height: 56,
+        borderRadius: 18,
         justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 32,
-        borderRadius: 12,
-        gap: 10,
-        marginTop: 10,
-        width: '100%',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
     },
     loginButtonText: {
         color: 'white',
         fontSize: 16,
-        fontWeight: '600',
-    },
-    createButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 8,
-        gap: 8,
-        borderWidth: 1,
-        borderColor: '#4A6FA5',
-    },
-    createButtonText: {
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    refreshHint: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        gap: 8,
-        marginBottom: 10,
-    },
-    refreshHintText: {
-        fontSize: 12,
-        fontStyle: 'italic',
+        fontWeight: '800',
     },
 });

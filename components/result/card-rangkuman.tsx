@@ -1,79 +1,135 @@
-import { Colors } from '@/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, Fonts } from '@/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  useColorScheme
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
-// --- ASUMSI IMPORT WARNA TEMA DARI FILE KITA SEBELUMNYA ---
-// Ganti path sesuai struktur proyek Anda
-
-
-// --- DEFINISI INTERFACE WARNA YANG DIBUTUHKAN ---
-interface ThemeColors {
-  text: string;
-  background: string;
-  cardBackground: string;
-  tint: string;
-  gradientPrimaryStart: string;
-  gradientPrimaryEnd: string;
+interface CardRangkumanProps {
+  title?: string;
+  description?: string;
+  variant?: 'default' | 'important';
+  tags?: string[];
 }
 
-// --- FUNGSI STYLE SHEET BERTEMA ---
-const getSummaryCardStyles = (colors: ThemeColors) => StyleSheet.create({
-    card: {
-       padding: 12,
-       borderRadius: 8,
-       marginVertical: 8,
-       borderWidth: 1,
-       // Boundary/Border menggunakan warna aksen (Tint)
-       borderColor: colors.tint, 
-    },
-    content: {
-        paddingHorizontal: 4,
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 4,
-        // Warna teks judul menggunakan teks utama
-        color: colors.text, 
-        textDecorationLine: 'underline',
-    },
-    description: {
-        fontSize: 15,
-        // Warna teks deskripsi menggunakan teks utama
-        color: colors.text, 
-        lineHeight: 20,
-    },
+const getSummaryCardStyles = (colors: any) => StyleSheet.create({
+  container: {
+    marginVertical: 8,
+  },
+  card: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 10,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.tint,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.tint + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  title: {
+    fontSize: 16,
+    fontFamily: Fonts.sans,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+  },
+  description: {
+    fontSize: 14,
+    fontFamily: Fonts.sans,
+    color: colors.text,
+    opacity: 0.9,
+    lineHeight: 20,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 12,
+    gap: 6,
+  },
+  tag: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: colors.tint + '15',
+  },
+  tagText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.tint,
+  },
 });
 
-// --- KOMPONEN CARD RANGKUMAN DENGAN GRADIENT BERTEMA ---
-interface CardProps {
-    title?: string;
-    description?: string;
-}
+export default function CardRangkuman({ 
+  title, 
+  description,
+  variant = 'default',
+  tags = []
+}: CardRangkumanProps) {
+  const scheme = useColorScheme();
+  const colorTheme = Colors[scheme ?? 'dark'];
+  const styles = getSummaryCardStyles(colorTheme);
 
-export default function CardRangkuman({ title, description }: CardProps) {
-    const scheme = useColorScheme();
-    // Pilih tema warna yang aktif
-    const colorTheme = Colors[scheme ?? 'dark']; 
-    
-    // Panggil fungsi style sheet dengan tema aktif
-    const styles = getSummaryCardStyles(colorTheme as ThemeColors);
+  // Pilih icon berdasarkan variant
+  const getIcon = () => {
+    switch (variant) {
+      case 'important':
+        return 'alert-circle';
+      default:
+        return 'book-open';
+    }
+  };
 
-    return (
-        <LinearGradient
-            start={{ x: 0, y: 1.3 }}
-            end={{ x: 1.3, y: 0 }}
-            // MENGGUNAKAN PROPERTI GRADIENT DARI TEMA
-            // Di mode gelap: Gradien dari Biru Pekat ke Biru Pekat Medium
-            // Di mode terang: Gradien dari Magic Blue ke Biru Lebih Muda
-            colors={[colorTheme.gradientPrimaryStart, colorTheme.gradientPrimaryEnd]}
-            style={styles.card}
-        >
-            <View style={styles.content}>
-                {/* {title && <Text style={styles.title}>{title}</Text>} */}
-                {description && <Text style={styles.description}>{description}</Text>}
-            </View>
-        </LinearGradient>
-    );
+  return (
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <View style={styles.iconContainer}>
+            <Feather 
+              name={getIcon()} 
+              size={18} 
+              color={colorTheme.tint} 
+            />
+          </View>
+          <Text style={styles.title} numberOfLines={2}>
+            {title || "Rangkuman Materi"}
+          </Text>
+        </View>
+        
+        {description && (
+          <Text style={styles.description}>
+            {description}
+          </Text>
+        )}
+        
+        {tags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            {tags.map((tag, index) => (
+              <View key={index} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </View>
+  );
 }

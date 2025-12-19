@@ -27,7 +27,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="listRangkuman"
         options={{
-          title: 'List Rangkuman',
+          title: 'Koleksi',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="bookmark" color={color} />,
         }}
       />

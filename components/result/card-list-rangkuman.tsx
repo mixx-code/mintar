@@ -40,102 +40,111 @@ export default function CardListRangkuman({
 }: CardListRangkumanProps) {
     const scheme = useColorScheme();
     const colorTheme = Colors[scheme ?? 'dark'];
+
+    // Menentukan skema warna teks di dalam card (selalu putih/terang karena gradien biasanya pekat)
+    const cardTextColor = '#FFFFFF';
+    const cardSubtextColor = 'rgba(255, 255, 255, 0.8)';
+
     const CardContent = () => (
-        <View style={[styles.content, style]}>
+        <View style={styles.content}>
             {/* Header dengan icon dan title */}
             <View style={styles.header}>
-                <View style={[styles.iconContainer, { backgroundColor: colorTheme.background + '80' }]}>
-                    <Ionicons name="document-text-outline" size={22} color={colorTheme.icon} />
+                <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+                    <Ionicons name="document-text" size={20} color={cardTextColor} />
                 </View>
 
+                <View style={styles.titleContainer}>
                     <Text
                         style={[
                             styles.title,
-                            { color: colorTheme.text },
+                            { color: cardTextColor },
                             titleStyle
                         ]}
-                        numberOfLines={2}
+                        numberOfLines={1}
                     >
                         {title}
                     </Text>
-                {/* <View style={styles.titleContainer}>
-                </View> */}
+                    {date && (
+                        <Text style={[styles.dateText, { color: cardSubtextColor }]}>
+                            {date}
+                        </Text>
+                    )}
+                </View>
             </View>
 
             {/* Stats Section */}
-            {showStats && (itemCount > 0 || soalCount > 0) && (
-                <View style={styles.statsContainer}>
-                    {itemCount > 0 && (
-                        <View style={styles.statItem}>
-                            <Ionicons name="book-outline" size={14} color={colorTheme.icon} />
-                            <Text style={[styles.statText, { color: colorTheme.text }]}>
-                                {itemCount} materi
-                            </Text>
-                        </View>
-                    )}
-
-                    {soalCount > 0 && (
-                        <View style={styles.statItem}>
-                            <Ionicons name="help-circle-outline" size={14} color={colorTheme.icon} />
-                            <Text style={[styles.statText, { color: colorTheme.text }]}>
-                                {soalCount} soal
-                            </Text>
-                        </View>
-                    )}
+            {showStats && (
+                <View style={[styles.statsContainer, { borderTopColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                    <View style={styles.statsLeft}>
+                        {itemCount > 0 && (
+                            <View style={styles.statItem}>
+                                <Ionicons name="book" size={12} color={cardSubtextColor} />
+                                <Text style={[styles.statText, { color: cardSubtextColor }]}>
+                                    {itemCount} Materi
+                                </Text>
+                            </View>
+                        )}
+                        {soalCount > 0 && (
+                            <View style={styles.statItem}>
+                                <Ionicons name="fitness" size={12} color={cardSubtextColor} />
+                                <Text style={[styles.statText, { color: cardSubtextColor }]}>
+                                    {soalCount} Soal
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
             )}
 
             {/* Delete Button */}
             {showDeleteButton && onDelete && (
                 <TouchableOpacity
-                    style={[styles.deleteButton, { backgroundColor: colorTheme.icon + '20' }]}
+                    style={[styles.deleteButton, { backgroundColor: 'rgba(255, 17, 17, 0.56)' }]}
                     onPress={onDelete}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    activeOpacity={0.6}
                 >
-                    <Ionicons name="trash-outline" size={18} color='red' />
+                    <Ionicons name="trash" size={16} color="#fff" />
                 </TouchableOpacity>
             )}
         </View>
     );
 
-    // Wrapper dengan atau tanpa TouchableOpacity
-    if (onPress) {
-        return (
-            <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-                <LinearGradient
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1.3, y: 0 }}
-                    colors={[colorTheme.gradientTertiaryEnd, colorTheme.gradientSecondaryStart]}
-                    style={[styles.container, style]}
-                >
-                    <CardContent />
-                </LinearGradient>
-            </TouchableOpacity>
-        );
-    }
+    const gradientColors = scheme === 'dark'
+        ? [colorTheme.gradientPrimaryEnd, colorTheme.gradientPrimaryStart] as const
+        : [colorTheme.gradientPrimaryStart, colorTheme.gradientPrimaryEnd] as const;
 
-    return (
+    const cardWrapper = (
         <LinearGradient
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1.3, y: 0 }}
-            colors={[colorTheme.gradientTertiaryEnd, colorTheme.gradientSecondaryStart]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            colors={gradientColors} // Sekarang error TS2769 akan hilang
             style={[styles.container, style]}
         >
             <CardContent />
         </LinearGradient>
     );
+
+    if (onPress) {
+        return (
+            <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+                {cardWrapper}
+            </TouchableOpacity>
+        );
+    }
+
+    return cardWrapper;
 }
 
 const styles = StyleSheet.create({
     container: {
-        padding: 16,
-        borderRadius: 12,
-        marginVertical: 8,
+        padding: 18,
+        borderRadius: 20, // Lebih rounded sesuai tren UI modern
+        marginVertical: 4,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 5,
     },
     content: {
         position: 'relative',
@@ -143,11 +152,13 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 14,
+        paddingRight: 30, // Ruang untuk tombol delete
     },
     iconContainer: {
-        padding: 8,
-        borderRadius: 8,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -155,49 +166,49 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        fontSize: 16,
-        fontWeight: '600',
-        lineHeight: 20,
-        marginBottom: 6,
+        fontSize: 17,
+        fontWeight: '700',
+        letterSpacing: -0.3,
     },
-    metaContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
-    metaItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    metaText: {
-        fontSize: 11,
-        fontFamily: 'System',
+    dateText: {
+        fontSize: 12,
+        fontWeight: '500',
+        marginTop: 2,
     },
     statsContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 16,
-        marginTop: 12,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 16,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.08)',
+    },
+    statsLeft: {
+        flexDirection: 'row',
+        gap: 12,
     },
     statItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 5,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
     },
     statText: {
-        fontSize: 12,
-        fontWeight: '500',
+        fontSize: 11,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     deleteButton: {
         position: 'absolute',
-        top: 0,
-        right: 0,
-        padding: 6,
-        borderRadius: 6,
+        top: -4,
+        right: -4,
+        width: 32,
+        height: 32,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },

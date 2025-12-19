@@ -5,85 +5,88 @@
 
 import { Platform } from 'react-native';
 
-// --- Palet Warna Utama ---
-const COLOR_GUNMETAL = '#2A3439';
-const COLOR_BRUSHED_STEEL = '#B8B8B8';
-const COLOR_COPPER = '#B87333';
-const COLOR_BRONZE = '#CD7F32';
-const COLOR_CHROME = '#E8E8E8';
-const COLOR_OIL_SLICK = '#2E2E3A';
+// --- Palet Warna Utama (Refined for Modern UI) ---
+// LIGHT MODE: Slate Blue & Indigo
+// DARK MODE: Deep Navy & Amber
+const COLOR_PURPLE = '#059669'; // Emerald/Forest
+const COLOR_ORANGE = '#D97706'; // Terracotta
+const COLOR_DARK_PURPLE = '#1A2F23'; // Deep Moss
+const COLOR_SOFT_CREAM = '#F8FAFC';  // Slate-50: Background sangat bersih
+const COLOR_WARM_GRAY = '#64748B';   // Slate-500: Standar desain modern
+const COLOR_LIGHT_LAVENDER = '#EEF2FF'; // Indigo-50: Background aksen yang lembut
 
-// Warna Utama (Tint) - metallic
-const tintColorLight = COLOR_COPPER;
-const tintColorDark = COLOR_BRONZE;
+// Warna Utama (Tint)
+const tintColorLight = COLOR_PURPLE; // Indigo
+const tintColorDark = COLOR_ORANGE;  // Amber (Kontras tinggi di gelap)
 
 export const Colors = {
   light: {
-    // Teks & Background - industrial light
-    text: '#1C1C1C',
-    background: 'linear-gradient(135deg, #F5F5F5 0%, #E0E0E0 100%)',
-    cardBackground: COLOR_CHROME,
+    text: '#0F172A',         // Slate-900: Deep contrast
+    background: '#FFFFFF',   // Pure White
+    cardBackground: '#F1F5F9', // Slate-100: Definisi card yang soft
 
-    // Card Khusus - metallic texture
-    cardPoint: 'linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%)',
-    cardSoal: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+    // Card Khusus - Pastel modern (Desaturasi)
+    cardPoint: '#FFFBEB',    // Amber light
+    cardSoal: '#F5F3FF',     // Violet light
 
-    // Status - metal tones
+    // Status - Balanced colors
     status: {
-      success: '#4CAF50', // Hijau standar untuk kontras
-      error: '#D32F2F',
-      warning: COLOR_COPPER,
+      success: '#10B981',    // Emerald
+      error: '#EF4444',      // Rose-Red
+      warning: '#F59E0B',     // Amber
     },
 
-    // Aksen & Ikon - industrial
     tint: tintColorLight,
-    icon: '#757575',
-    tabIconDefault: '#9E9E9E',
+    icon: '#64748B',         // Slate-500: Neutral gray-blue
+    tabIconDefault: '#94A3B8',
     tabIconSelected: tintColorLight,
-    titikPoin: COLOR_BRONZE,
+    titikPoin: '#818CF8',    // Indigo-400
 
-    // Gradien - metallic sheen
-    gradientPrimaryStart: COLOR_BRUSHED_STEEL,
-    gradientPrimaryEnd: COLOR_CHROME,
-    gradientSecondaryStart: COLOR_COPPER,
-    gradientSecondaryEnd: '#FF9800',
-    gradientTertiaryStart: '#9E9E9E',
-    gradientTertiaryEnd: '#616161',
+    gradientPrimaryStart: '#F472B6',
+    gradientPrimaryEnd: '#8B5CF6',
+
+    // Secondary: Electric Blue to Sky (Terasa ringan dan luas)
+    gradientSecondaryStart: '#3B82F6',
+    gradientSecondaryEnd: '#2DD4BF',
+
+    // Tertiary: Golden Hour (Orange ke Kuning cerah)
+    gradientTertiaryStart: '#FBBF24',
+    gradientTertiaryEnd: '#F97316',
   },
   dark: {
-    // Teks & Background - factory dark
-    text: COLOR_CHROME,
-    background: COLOR_GUNMETAL,
-    cardBackground: COLOR_OIL_SLICK,
+    text: '#F8FAFC',         // Slate-50: Crisp text
+    background: '#020617',   // Slate-950: Sangat deep, memberikan kesan OLED
+    cardBackground: '#1E293B', // Slate-800: Kontras elegan dengan background
 
-    // Card Khusus
-    cardPoint: '#3E2723', // Brown metal
-    cardSoal: '#37474F', // Blue gray metal
+    // Card Khusus - Rich & Muted
+    cardPoint: '#451A03',    // Deep Amber Brown
+    cardSoal: '#1E1B4B',     // Deep Indigo
 
-    // Status
     status: {
-      success: '#388E3C',
-      error: '#C62828',
-      warning: COLOR_BRONZE,
+      success: '#34D399',
+      error: '#F87171',
+      warning: '#FBBF24',
     },
 
-    // Aksen & Ikon
-    tint: tintColorDark,
-    icon: COLOR_BRUSHED_STEEL,
-    tabIconDefault: '#90A4AE',
+    tint: tintColorDark,     // Orange Amber memberikan kesan hangat
+    icon: '#94A3B8',         // Slate-400
+    tabIconDefault: '#475569',
     tabIconSelected: tintColorDark,
-    titikPoin: COLOR_COPPER,
+    titikPoin: '#F59E0B',
 
-    // Gradien - industrial dark
-    gradientPrimaryStart: COLOR_GUNMETAL,
-    gradientPrimaryEnd: COLOR_OIL_SLICK,
-    gradientSecondaryStart: COLOR_BRONZE,
-    gradientSecondaryEnd: '#8D6E63',
-    gradientTertiaryStart: '#546E7A',
-    gradientTertiaryEnd: '#37474F',
+    // Primary: Slate-800 to Slate-900 (Glassmorphism look)
+    gradientPrimaryStart: '#7C3AED',
+    gradientPrimaryEnd: '#2563EB',
+
+    // Secondary: Emerald Glow (Hijau neon yang elegan di layar gelap)
+    gradientSecondaryStart: '#10B981',
+    gradientSecondaryEnd: '#064E3B',
+
+    // Tertiary: Cyber Teal (Modern, menggantikan Merah/Hitam yang tadi)
+    gradientTertiaryStart: '#14B8A6',
+    gradientTertiaryEnd: '#0D9488',
   },
 };
-
 
 
 export const Fonts = Platform.select({

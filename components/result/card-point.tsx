@@ -1,83 +1,80 @@
-import { Colors } from '@/constants/theme';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, Fonts } from '@/constants/theme';
+import { Feather } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 
-// --- ASUMSI IMPORT WARNA TEMA DARI FILE KITA SEBELUMNYA ---
-// Pastikan path ini benar
-
-// --- DEFINISI INTERFACE WARNA YANG DIBUTUHKAN ---
-interface ThemeColors {
-  text: string;
-  background: string;
-  cardPoint: string; // Warna khusus untuk card poin
-  status: {
-    success: string;
-  };
-  gradientSecondaryStart: string; // Untuk Colors.border.light
-  gradientSecondaryEnd: string;   // Untuk Colors.border.dark
+interface CardPointProps {
+    point?: string;
+    index?: number;
 }
 
-// --- FUNGSI STYLE SHEET BERTEMA ---
-const getCardPointStyles = (colors: ThemeColors) => StyleSheet.create({
+const getCardPointStyles = (colors: any) => StyleSheet.create({
+    container: {
+        marginVertical: 6,
+    },
     card: {
-       paddingHorizontal: 12,
-       paddingVertical: 8,
-       borderRadius: 8,
-       marginVertical: 8,
-       // Card Poin tidak menggunakan latar belakang transparan agar lebih menonjol
-       backgroundColor: colors.cardPoint, 
+      backgroundColor: colors.cardPoint,
+      borderRadius: 8,
+      padding: 12,
+      flexDirection: 'row',
+        alignItems: 'flex-start',
+        borderWidth: 1,
+        borderColor: colors.tint + '20',
     },
-    content: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 7,
-        boxSizing: 'border-box',
-        // paddingLeft: 4,
-        paddingRight: 8,
-        // boxSizing tidak didukung di React Native StyleSheet
-        // boxSizing: 'border-box', 
+    numberContainer: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: colors.tint,
+        justifyContent: 'center',
+      alignItems: 'center',
+        marginRight: 12,
+        marginTop: 2,
     },
-    point: {
+    numberText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        fontFamily: Fonts.sans,
+    },
+    pointText: {
         fontSize: 14,
-        fontWeight: 'bold',
-        // Warna teks
-        color: colors.text, 
+      fontFamily: Fonts.sans,
+      color: colors.text,
+      flex: 1,
+      lineHeight: 20,
     },
-    lingkaran: {
-        width: 10, 
-        height: 10,
-        borderRadius: 5, // Mengganti "50%" dengan nilai numerik
-        // Warna lingkaran menggunakan warna Status Success
-        backgroundColor: colors.status.success, 
-    }
+    checkIcon: {
+        marginLeft: 8,
+        marginTop: 2,
+    },
 });
 
-// --- KOMPONEN CARD POINT DENGAN GRADIENT BERTEMA ---
-interface CardProps {
-    point?: string;
-}
-
-export default function CardPoint({ point }: CardProps) {
+export default function CardPoint({ point, index }: CardPointProps) {
     const scheme = useColorScheme();
-    const colorTheme = Colors[scheme ?? 'dark']; 
-    
-    // Pastikan type assertion di sini jika diperlukan, atau perbaiki interface Colors
-    const styles = getCardPointStyles(colorTheme as ThemeColors);
+    const colorTheme = Colors[scheme ?? 'dark'];
+    const styles = getCardPointStyles(colorTheme);
 
     return (
-        <LinearGradient
-            start={{ x: 0, y: 1.3 }}
-            end={{ x: 1.3, y: 0 }}
-            // MENGGUNAKAN GRADIENT SEKUNDER UNTUK BORDER/EFEK
-            // Gradien ini biasanya lebih cerah atau memiliki kombinasi warna aksen (Biru-Emas)
-            colors={[colorTheme.gradientTertiaryStart, colorTheme.gradientTertiaryEnd]}
-            style={styles.card}
-        >
-            <View style={styles.content}>
-                <View style={styles.lingkaran} />
-                {point && <Text style={styles.point}>{point}</Text>}
-            </View>
-        </LinearGradient>
-    );
+        <View style={styles.container}>
+            <View style={styles.card}>
+                {index !== undefined && (
+                    <View style={styles.numberContainer}>
+                        <Text style={styles.numberText}>{index}</Text>
+                    </View>
+                )}
+
+              <Text style={styles.pointText}>
+                  {point}
+              </Text>
+
+              <Feather
+                  name="check-circle"
+                  size={18}
+                  color={colorTheme.tint}
+                  style={styles.checkIcon}
+              />
+          </View>
+      </View>
+  );
 }

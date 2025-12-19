@@ -48,3 +48,79 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+```
+mintar
+├─ app
+│  ├─ (tabs)
+│  │  ├─ index.tsx
+│  │  ├─ listRangkuman.tsx
+│  │  ├─ profile.tsx
+│  │  └─ _layout.tsx
+│  ├─ detailRangkuman.tsx
+│  ├─ modal.tsx
+│  └─ _layout.tsx
+├─ app.json
+├─ assets
+│  ├─ images
+│  │  ├─ favicon.png
+│  │  ├─ icon-buku.png
+│  │  ├─ icon-tipe-1.png
+│  │  ├─ icon-tipe-2.png
+│  │  ├─ icon.png
+│  │  ├─ partial-react-logo.png
+│  │  ├─ react-logo.png
+│  │  ├─ react-logo@2x.png
+│  │  ├─ react-logo@3x.png
+│  │  └─ splash-icon.png
+│  └─ lottie
+│     ├─ PlikPDF.json
+│     ├─ sparkels.json
+│     └─ success.json
+├─ components
+│  ├─ AccordionSection.tsx
+│  ├─ external-link.tsx
+│  ├─ FormAuth.tsx
+│  ├─ haptic-tab.tsx
+│  ├─ hello-wave.tsx
+│  ├─ parallax-scroll-view.tsx
+│  ├─ ProfileComponent.tsx
+│  ├─ result
+│  │  ├─ card-list-rangkuman.tsx
+│  │  ├─ card-point.tsx
+│  │  ├─ card-rangkuman.tsx
+│  │  └─ card-soal.tsx
+│  ├─ themed-text.tsx
+│  ├─ themed-view.tsx
+│  └─ ui
+│     ├─ collapsible.tsx
+│     ├─ icon-symbol.ios.tsx
+│     └─ icon-symbol.tsx
+├─ constans
+│  └─ Colors.ts
+├─ constants
+│  └─ theme.ts
+├─ contexts
+│  ├─ AuthContext.tsx
+│  └─ AuthProvider.tsx
+├─ eas.json
+├─ eslint.config.js
+├─ hooks
+│  ├─ use-color-scheme.ts
+│  ├─ use-color-scheme.web.ts
+│  ├─ use-theme-color.ts
+│  └─ userAuth.ts
+├─ package-lock.json
+├─ package.json
+├─ README.md
+├─ scripts
+│  └─ reset-project.js
+├─ services
+│  └─ auth.ts
+├─ styles
+│  ├─ AccordionStyle.ts
+│  ├─ cardRangkuman.ts
+│  └─ home.ts
+└─ tsconfig.json
+
+```

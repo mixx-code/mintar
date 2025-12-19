@@ -1,6 +1,15 @@
-import { StyleSheet, TextStyle, ViewStyle } from 'react-native';
-// Asumsi: Anda akan mengimpor Colors dari file tema yang sudah kita buat
-// import { Colors } from 'constants/theme'; 
+import { Dimensions, PixelRatio, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Standar lebar layar desain (iPhone 11/13/14)
+const designWidth = 375;
+
+// Fungsi helper untuk skala font
+const scale = (size: number) => {
+  const newSize = size * (SCREEN_WIDTH / designWidth);
+  return Math.round(PixelRatio.roundToNearestPixel(newSize));
+};
 
 interface AppColors {
   text: string;
@@ -12,210 +21,181 @@ interface AppColors {
   gradientPrimaryEnd: string;
 }
 
-// Fungsi ini akan menerima objek warna (misalnya Colors.dark atau Colors.light)
 export const getStyles = (colors: AppColors) => StyleSheet.create({
   container: {
-    gap: 30,
-    padding: 10,
+    gap: scale(20),
+    padding: scale(16),
+    paddingTop: scale(40),
+    backgroundColor: colors.background,
     justifyContent: 'center',
-    // Gunakan background utama tema
-    backgroundColor: colors.background, 
   } as ViewStyle,
-  
-  // Area untuk upload file (dashed border)
+
   areaFile: {
     flex: 1,
-    // Gunakan warna tint/emas untuk border
-    borderColor: colors.tint, 
-    borderWidth: 1,
+    borderColor: colors.tint,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 150,
-    borderRadius: 10,
-    // Gunakan cardBackground atau warna transparan dari tint
-    // Saya gunakan warna cardBackground dengan sedikit opasitas
-    backgroundColor: `${colors.cardBackground}33`, // Opasitas 20%
+    minHeight: scale(180),
+    borderRadius: scale(20),
+    backgroundColor: colors.cardBackground,
+    overflow: 'hidden',
   } as ViewStyle,
-  
-  // Tombol utama (Generate)
+
   buttonGenerate: {
-    flex: 3,
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 50,
-    borderRadius: 5,
-    // Diisi dengan warna tint utama (Magic Blue atau Gold)
-    backgroundColor: colors.tint, 
+    height: scale(54),
+    borderRadius: scale(15),
   } as ViewStyle,
-  
-  // Tombol sekunder (Reupload)
+
   buttonReupload: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 50,
-    borderRadius: 5,
-    // Latar belakang Card atau background dengan border tint
-    backgroundColor: colors.cardBackground,
+    height: scale(54),
+    borderRadius: scale(15),
     borderWidth: 1,
-    borderColor: colors.background,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   } as ViewStyle,
-  
-  // Gaya teks umum
+
   text: {
     backgroundColor: 'transparent',
-    fontSize: 15,
-    // Warna teks utama
-    color: colors.text, 
-    marginLeft: 8,
-    
+    fontSize: scale(15),
+    color: colors.text,
+    marginLeft: scale(8),
+    flexShrink: 1, // Agar teks menyusut jika tidak cukup ruang
+    flexWrap: 'wrap', // Memungkinkan teks untuk wrap ke baris berikutnya
+    // flex: 1, // Menggunakan sisa ruang yang tersedia
   } as TextStyle,
-  
-  // Info File (Card)
+  textPdf: {
+    backgroundColor: 'transparent',
+    fontSize: scale(15),
+    color: colors.text,
+    marginLeft: scale(8),
+    flexShrink: 1, // Agar teks menyusut jika tidak cukup ruang
+    flexWrap: 'wrap', // Memungkinkan teks untuk wrap ke baris berikutnya
+    flex: 1, // Menggunakan sisa ruang yang tersedia
+  } as TextStyle,
+
   fileInfoContainer: {
-    padding: 15,
-    // Latar belakang card
-    backgroundColor: colors.cardBackground, 
-    borderRadius: 8,
-    marginBottom: 10,
+    padding: scale(15),
+    backgroundColor: colors.cardBackground,
+    borderRadius: scale(8),
+    marginBottom: scale(10),
   } as ViewStyle,
-  
+
   fileInfoItem: {
-    fontSize: 14,
-    marginBottom: 8,
-    lineHeight: 20,
-    // Warna teks utama
-    color: colors.text, 
+    fontSize: scale(14),
+    marginBottom: scale(8),
+    lineHeight: scale(20),
+    color: colors.text,
   } as TextStyle,
-  
-  // Label Info File (misalnya "Nama File:")
+
   fileInfoLabel: {
+    fontSize: scale(14),
     fontWeight: '600',
-    // Warna sekunder/aksen (Tint)
-    color: colors.tint, 
+    color: colors.tint,
   } as TextStyle,
-  
-  // Soal Card
+
   soalContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
-    padding: 15,
-    // Latar belakang card
-    backgroundColor: colors.cardBackground, 
-    borderRadius: 8,
+    marginBottom: scale(20),
+    padding: scale(15),
+    backgroundColor: colors.cardBackground,
+    borderRadius: scale(12), // Sedikit lebih rounded agar modern
   } as ViewStyle,
-  
-  // Nomor Soal
+
   soalNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginRight: 10,
-    // Warna Tint
-    color: colors.tint, 
+    fontSize: scale(16),
+    fontWeight: '700',
+    marginRight: scale(10),
+    color: colors.tint,
   } as TextStyle,
-  
-  soalContent: {
-    flex: 1,
-  } as ViewStyle,
-  
-  // Pertanyaan
+
   soalPertanyaan: {
-    fontSize: 15,
-    fontWeight: '500',
-    marginBottom: 12,
-    lineHeight: 22,
-    // Warna teks utama
-    color: colors.text, 
+    fontSize: scale(15),
+    fontWeight: '600',
+    marginBottom: scale(12),
+    lineHeight: scale(22),
+    color: colors.text,
   } as TextStyle,
-  
-  pilihanContainer: {
-    flexDirection: 'row',
-    marginBottom: 8,
-    alignItems: 'flex-start',
-  } as ViewStyle,
-  
-  // Huruf Pilihan (A, B, C...)
+
   pilihanHuruf: {
-    fontWeight: '500',
-    marginRight: 8,
-    // Warna Gold (Aksen sekunder)
-    color: colors.tint === '#D4AF37' ? colors.tint : '#D4AF37', // Jika tint bukan emas, gunakan emas
-    minWidth: 20,
+    fontSize: scale(14),
+    fontWeight: '700',
+    marginRight: scale(8),
+    color: colors.tint === '#D4AF37' ? colors.tint : '#D4AF37',
+    minWidth: scale(20),
   } as TextStyle,
-  
-  // Teks Pilihan
+
   pilihanText: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    // Warna teks utama
-    color: colors.text, 
+    fontSize: scale(14),
+    lineHeight: scale(20),
+    color: colors.text,
   } as TextStyle,
-  
-  // Jawaban yang Benar
+
   jawabanContainer: {
     flexDirection: 'row',
-    marginTop: 10,
-    padding: 10,
-    // Background hijau transparan diganti dengan background card transparan + border tint
-    backgroundColor: `${colors.cardBackground}66`, 
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    // Border warna Tint (Magic Blue atau Gold)
-    borderLeftColor: colors.tint, 
+    marginTop: scale(10),
+    padding: scale(10),
+    backgroundColor: `${colors.cardBackground}66`,
+    borderRadius: scale(8),
+    borderLeftWidth: 4,
+    borderLeftColor: colors.tint,
   } as ViewStyle,
-  
-  // Label Jawaban ("Jawaban:")
+
   jawabanLabel: {
-    fontWeight: '600',
-    // Warna Tint
-    color: colors.tint, 
+    fontSize: scale(14),
+    fontWeight: '700',
+    color: colors.tint,
   } as TextStyle,
-  
-  // Teks Jawaban
+
   jawabanText: {
-    fontWeight: '600',
-    // Warna teks utama
-    color: colors.text, 
+    fontSize: scale(14),
+    fontWeight: '700',
+    color: colors.text,
   } as TextStyle,
-  
-  // Summary
-  summaryContainer: {
-    padding: 15,
-    // Latar belakang Card
-    backgroundColor: colors.cardBackground, 
-    borderRadius: 8,
-  } as ViewStyle,
-  
+
   summaryItem: {
-    fontSize: 14,
-    marginBottom: 10,
-    // Warna ikon/teks sekunder yang lebih lembut
-    color: colors.icon, 
+    fontSize: scale(14),
+    marginBottom: scale(10),
+    color: colors.icon,
   } as TextStyle,
-  // Di dalam fungsi getStyles, tambahkan:
-buttonSave: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingVertical: 12,
-  paddingHorizontal: 20,
-  borderRadius: 12,
-  marginHorizontal: 20,
-  marginBottom: 10,
-},
-savedDataInfo: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 10,
-  borderRadius: 8,
-  borderWidth: 1,
-  borderColor: colors.icon,
-  marginHorizontal: 20,
-  marginTop: 10,
-},
+
+  buttonSave: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scale(12),
+    paddingHorizontal: scale(20),
+    borderRadius: scale(12),
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+
+  savedDataInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: scale(12),
+    borderRadius: scale(12),
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginTop: scale(10),
+  },
+
+  sectionHeader: {
+    fontSize: scale(20),
+    color: colors.text,
+    fontWeight: '800',
+    marginTop: scale(20),
+    marginBottom: scale(10),
+    letterSpacing: -0.5,
+  } as TextStyle,
 });

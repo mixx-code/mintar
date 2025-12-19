@@ -1,14 +1,11 @@
-// components/result/card-soal.tsx
-import { Colors } from '@/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { Colors, Fonts } from '@/constants/theme';
+import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
-  TextStyle,
   TouchableOpacity,
   View,
-  ViewStyle,
   useColorScheme
 } from 'react-native';
 
@@ -22,191 +19,182 @@ export interface SoalLatihan {
 interface CardSoalProps {
   soal: SoalLatihan;
   nomor: number;
-  showJawaban?: boolean; // default state jika ingin jawaban awal hidden
+  showJawaban?: boolean;
 }
 
-interface ThemeColors {
-  text: string;
-  cardSoal: string;
-  tint: string;
-  icon: string;
-  status: {
-    success: string;
-    warning: string;
-  };
-  border?: string;
-}
-
-// --- FUNGSI STYLE SHEET BERTEMA ---
-const getCardSoalStyles = (colors: ThemeColors) => StyleSheet.create({
+const getCardSoalStyles = (colors: any) => StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    padding: 16,
     backgroundColor: colors.cardSoal,
     borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.border ?? `${colors.tint}33`,
-  } as ViewStyle,
-  
-  nomor: {
-    fontSize: 16,
-    fontWeight: '600',
+    borderColor: colors.tint + '20',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  nomorContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.tint,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
-    color: colors.tint,
-    minWidth: 24,
-  } as TextStyle,
-  
-  content: {
-    flex: 1,
-  } as ViewStyle,
-  
+  },
+  nomorText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: Fonts.sans,
+  },
   pertanyaan: {
     fontSize: 15,
-    fontWeight: '500',
-    marginBottom: 16,
-    lineHeight: 22,
+    fontFamily: Fonts.sans,
     color: colors.text,
-  } as TextStyle,
-  
-  pilihanContainer: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    alignItems: 'flex-start',
-  } as ViewStyle,
-  
-  pilihanHuruf: {
-    fontWeight: '500',
-    marginRight: 10,
-    color: colors.status.warning,
-    minWidth: 24,
-    fontSize: 14,
-  } as TextStyle,
-  
-  pilihanText: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.icon,
-  } as TextStyle,
-  
-  // Container tombol toggle
-  toggleButtonContainer: {
-    marginTop: 12,
+    lineHeight: 22,
+  },
+  pilihanContainer: {
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: colors.cardBackground,
+    borderWidth: 1,
+    borderColor: colors.tint + '15',
+  },
+  pilihanContainerCorrect: {
+    backgroundColor: colors.status.success + '15',
+    borderColor: colors.status.success + '40',
+  },
+  pilihanContent: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-  } as ViewStyle,
-  
+    alignItems: 'center',
+  },
+  pilihanHuruf: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.tint,
+    width: 20,
+    marginRight: 10,
+    fontFamily: Fonts.sans,
+  },
+  pilihanHurufCorrect: {
+    color: colors.status.success,
+  },
+  pilihanText: {
+    fontSize: 14,
+    fontFamily: Fonts.sans,
+    color: colors.text,
+    opacity: 0.9,
+    flex: 1,
+    lineHeight: 20,
+  },
+  pilihanTextCorrect: {
+    color: colors.status.success,
+    opacity: 1,
+    fontWeight: '600',
+  },
+  footer: {
+    marginTop: 16,
+  },
   toggleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: `${colors.tint}15`,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: colors.tint + '10',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: `${colors.tint}30`,
-  } as ViewStyle,
-  
+    borderColor: colors.tint + '30',
+    alignSelf: 'flex-start',
+  },
   toggleButtonText: {
     fontSize: 13,
-    fontWeight: '500',
-    marginLeft: 6,
+    fontWeight: '600',
     color: colors.tint,
-  } as TextStyle,
-  
-  // Container Jawaban (akan muncul ketika di-toggle)
+    marginLeft: 8,
+    fontFamily: Fonts.sans,
+  },
   jawabanContainer: {
-    flexDirection: 'row',
     marginTop: 12,
-    padding: 12,
-    backgroundColor: `${colors.cardSoal}55`,
+    padding: 14,
+    backgroundColor: colors.status.success + '10',
     borderRadius: 8,
     borderLeftWidth: 4,
     borderLeftColor: colors.status.success,
+    flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-  } as ViewStyle,
-  
+  },
   jawabanLabel: {
+    fontSize: 14,
     fontWeight: '600',
     color: colors.status.success,
-    fontSize: 14,
-  } as TextStyle,
-  
+    fontFamily: Fonts.sans,
+  },
   jawabanText: {
-    fontWeight: '700',
-    color: colors.text,
     fontSize: 14,
-    marginHorizontal: 4,
-  } as TextStyle,
-  
-  jawabanDetail: {
-    fontSize: 13,
-    color: `${colors.status.success}cc`,
-    fontStyle: 'italic',
-  } as TextStyle,
-  
-  // Style untuk highlight jawaban yang benar di pilihan
-  pilihanContainerCorrect: {
-    backgroundColor: `${colors.status.success}15`,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginBottom: 8,
-  } as ViewStyle,
-  
-  pilihanTextCorrect: {
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.status.success,
-  } as TextStyle,
+    marginLeft: 6,
+    fontFamily: Fonts.sans,
+  },
 });
 
 export default function CardSoal({ soal, nomor, showJawaban = false }: CardSoalProps) {
   const scheme = useColorScheme();
-  const colorTheme = Colors[scheme ?? 'dark'] as ThemeColors;
-  
-  // State untuk toggle tampil/sembunyi jawaban
+  const colorTheme = Colors[scheme ?? 'dark'];
   const [isJawabanVisible, setIsJawabanVisible] = useState(showJawaban);
   
   const styles = getCardSoalStyles(colorTheme);
-  
-  // Fungsi untuk toggle visibility
+
   const toggleJawaban = () => {
     setIsJawabanVisible(!isJawabanVisible);
   };
-  
-  // Fungsi untuk mendapatkan indeks jawaban (0 untuk A, 1 untuk B, dst)
+
   const getJawabanIndex = () => {
     const jawabanHuruf = soal.jawaban.toUpperCase();
-    return jawabanHuruf.charCodeAt(0) - 65; // 'A' = 65 dalam ASCII
+    return jawabanHuruf.charCodeAt(0) - 65;
   };
   
   const jawabanIndex = getJawabanIndex();
   
   return (
     <View style={styles.container}>
-      <Text style={styles.nomor}>{nomor}.</Text>
-      <View style={styles.content}>
+      <View style={styles.header}>
+        <View style={styles.nomorContainer}>
+          <Text style={styles.nomorText}>{nomor}</Text>
+        </View>
+
         <Text style={styles.pertanyaan}>
           {soal.pertanyaan}
         </Text>
+      </View>
 
-        {/* Pilihan Jawaban */}
-        {soal.pilihan?.map((pilihan, idx) => {
-          const isCorrectAnswer = idx === jawabanIndex;
-          
-          return (
-            <View 
-              key={idx} 
-              style={[
-                styles.pilihanContainer,
-                isJawabanVisible && isCorrectAnswer && styles.pilihanContainerCorrect
-              ]}
-            >
+      {soal.pilihan?.map((pilihan, idx) => {
+        const isCorrectAnswer = idx === jawabanIndex;
+
+        return (
+          <View
+            key={idx}
+            style={[
+              styles.pilihanContainer,
+              isJawabanVisible && isCorrectAnswer && styles.pilihanContainerCorrect
+            ]}
+          >
+            <View style={styles.pilihanContent}>
               <Text style={[
                 styles.pilihanHuruf,
-                isJawabanVisible && isCorrectAnswer && styles.pilihanTextCorrect
+                isJawabanVisible && isCorrectAnswer && styles.pilihanHurufCorrect
               ]}>
                 {String.fromCharCode(65 + idx)}.
               </Text>
@@ -217,40 +205,32 @@ export default function CardSoal({ soal, nomor, showJawaban = false }: CardSoalP
                 {pilihan}
               </Text>
             </View>
-          );
-          
-        })}
-        {/* Tombol Toggle Jawaban */}
-        <View style={styles.toggleButtonContainer}>
-          <TouchableOpacity 
-            style={styles.toggleButton}
-            onPress={toggleJawaban}
-            activeOpacity={0.7}
-          >
-            <Ionicons 
-              name={isJawabanVisible ? "eye-off-outline" : "eye-outline"} 
-              size={16} 
-              color={colorTheme.tint} 
-            />
-            <Text style={styles.toggleButtonText}>
-              {isJawabanVisible ? "Sembunyikan Jawaban" : "Tampilkan Jawaban"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+          </View>
+        );
+      })}
 
-        {/* Jawaban (hanya tampil jika isJawabanVisible = true) */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={toggleJawaban}
+          activeOpacity={0.7}
+        >
+          <Feather
+            name={isJawabanVisible ? "eye-off" : "eye"}
+            size={16}
+            color={colorTheme.tint}
+          />
+          <Text style={styles.toggleButtonText}>
+            {isJawabanVisible ? "Sembunyikan Jawaban" : "Lihat Jawaban"}
+          </Text>
+        </TouchableOpacity>
+
         {isJawabanVisible && (
           <View style={styles.jawabanContainer}>
-            <Text style={styles.jawabanLabel}>Jawaban: </Text>
-            <Text style={styles.jawabanText}>
-              {soal.jawaban}
-            </Text>
-            {/* <Text style={styles.jawabanDetail}>
-              {` (${soal.pilihan[jawabanIndex]})`}
-            </Text> */}
+            <Text style={styles.jawabanLabel}>Jawaban:</Text>
+            <Text style={styles.jawabanText}>{soal.jawaban}</Text>
           </View>
         )}
-        
       </View>
     </View>
   );

@@ -247,23 +247,46 @@ export default function HomeScreen() {
     try {
       setIsSaving(true);
 
-      // Tambahkan informasi user yang menyimpan
+      // 1. BACA DATA YANG SUDAH ADA DARI SECURESTORE
+      const existingDataJson = await SecureStore.getItemAsync(STORAGE_KEY);
+      let existingData = [];
+
+      if (existingDataJson) {
+        try {
+          existingData = JSON.parse(existingDataJson);
+          if (!Array.isArray(existingData)) {
+            console.warn('Existing data is not an array, resetting...');
+            existingData = [];
+          }
+        } catch (error) {
+          console.error('Error parsing existing data:', error);
+          existingData = [];
+        }
+      }
+
+      console.log(`Found ${existingData.length} existing items in storage`);
+
+      // 2. Buat data baru dengan ID yang unik
       const dataToSave = {
         ...apiData,
         savedAt: new Date().toISOString(),
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
       };
 
-      // Tambahkan data baru ke daftar yang sudah ada
-      const updatedList = [dataToSave, ...savedDataList];
+      console.log('New item ID:', dataToSave.id);
 
-      // Simpan ke SecureStore
+      // 3. Gabungkan data baru dengan data yang sudah ada
+      const updatedList = [dataToSave, ...existingData];
+
+      console.log(`Total items after save: ${updatedList.length}`);
+
+      // 4. Simpan ke SecureStore
       await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updatedList));
 
-      // Update state
+      // 5. Update state dengan data yang benar
       setSavedDataList(updatedList);
 
-      // Tampilkan alert sukses
+      // 6. Tampilkan alert sukses
       Dialog.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Berhasil!',
@@ -276,6 +299,9 @@ export default function HomeScreen() {
           console.log('Data saved successfully. Total items:', updatedList.length);
           // Sembunyikan floating button setelah berhasil save
           setShowFloatingSave(false);
+
+          // OPTIONAL: Panggil loadSavedData untuk refresh
+          // loadSavedData();
         }
       });
 
@@ -285,7 +311,7 @@ export default function HomeScreen() {
       Dialog.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
-        textBody: "gagal menyimpan data",
+        textBody: "Gagal menyimpan data: " + (error.message || 'Unknown error'),
         button: 'OK',
         onPressButton: () => Dialog.hide(),
         autoClose: 5000
@@ -322,7 +348,7 @@ export default function HomeScreen() {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       padding: 12,
-      backgroundColor: 'rgba(74, 111, 165, 0.1)',
+      backgroundColor: colorTheme.cardBackground,
       borderRadius: 12,
       marginTop: 20,
       marginHorizontal: 20,
@@ -330,7 +356,7 @@ export default function HomeScreen() {
     },
     container: {
       flex: 1,
-      marginTop: 35,
+
     },
   };
 
@@ -376,7 +402,7 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       {document && (
-        <ThemedView style={{ marginTop: 50, flexDirection: 'row', justifyContent: 'space-between', gap: 10, height: 50 }}>
+        <ThemedView style={{ marginTop: 120, flexDirection: 'row', justifyContent: 'space-between', gap: 10, height: 50 }}>
           <TouchableOpacity style={{ flex: 3 }} onPress={generateWithAI} disabled={loading}>
             <LinearGradient
               start={{ x: 2, y: 0 }}
@@ -408,10 +434,10 @@ export default function HomeScreen() {
             <LinearGradient
               start={{ x: 2, y: 0 }}
               end={{ x: 0, y: 3 }}
-              colors={[colorTheme.gradientSecondaryStart, colorTheme.gradientSecondaryEnd]}
+              colors={[colorTheme.gradientTertiaryStart, colorTheme.gradientTertiaryEnd]}
               style={baseStyles.buttonReupload}
             >
-              <ThemedText style={baseStyles.text}>Ganti PDF</ThemedText>
+              <ThemedText style={baseStyles.textPdf}>Ganti PDF</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
         </ThemedView>
@@ -439,7 +465,7 @@ export default function HomeScreen() {
               style={{ width: 40, height: 40 }}
             />
           ) : (
-            <Ionicons name="save-outline" size={28} color="#fff" />
+              <Ionicons name="save-outline" size={28} color={colorTheme.tint} />
           )}
         </TouchableOpacity>
       )}
